@@ -2,11 +2,11 @@ package com.sandeep.demo.service;
 
 import com.sandeep.demo.model.FinancialRecord;
 import com.sandeep.demo.repository.FinancialRecordRepository;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class FinanceService {
@@ -21,39 +21,32 @@ public class FinanceService {
         double totalExpenses = 0.0;
         Map<String, Double> categoryTotals = new HashMap<>();
 
-        
         for (FinancialRecord r : records) {
             double amount = (r.getAmount() != null) ? r.getAmount() : 0.0;
 
-            // Income aur Expense calculate karne ke liye simple if-else
             if ("INCOME".equalsIgnoreCase(r.getType())) {
                 totalIncome += amount;
             } else if ("EXPENSE".equalsIgnoreCase(r.getType())) {
                 totalExpenses += amount;
             }
 
-            // Category wise totals manually add karna
             if (r.getCategory() != null) {
                 String cat = r.getCategory();
-                double currentTotal = categoryTotals.getOrDefault(cat, 0.0);
-                categoryTotals.put(cat, currentTotal + amount);
+                categoryTotals.put(cat, categoryTotals.getOrDefault(cat, 0.0) + amount);
             }
         }
 
-        // Recent Activity ke liye list ko sort karna (simple logic)
+        // Recent Activity: Sorting latest first and picking top 5
         List<FinancialRecord> sortedRecords = new ArrayList<>(records);
         sortedRecords.sort((a, b) -> {
             if (a.getDate() == null || b.getDate() == null) return 0;
-            return b.getDate().compareTo(a.getDate()); // Latest first
+            return b.getDate().compareTo(a.getDate());
         });
 
-        // Sirf top 5 records lena
-        List<FinancialRecord> recentActivity = new ArrayList<>();
-        for (int i = 0; i < Math.min(5, sortedRecords.size()); i++) {
-            recentActivity.add(sortedRecords.get(i));
-        }
+        List<FinancialRecord> recentActivity = sortedRecords.stream()
+                .limit(5)
+                .collect(Collectors.toList());
 
-        // Final Result Map
         Map<String, Object> summary = new HashMap<>();
         summary.put("totalIncome", totalIncome);
         summary.put("totalExpenses", totalExpenses);
@@ -62,6 +55,16 @@ public class FinanceService {
         summary.put("recentActivity", recentActivity);
 
         return summary;
+    }
+
+    public List<FinancialRecord> getFilteredRecords(String type, String category, String date) {
+        List<FinancialRecord> allRecords = repository.findAll();
+
+        return allRecords.stream()
+            .filter(r -> (type == null || type.isEmpty() || r.getType().equalsIgnoreCase(type)))
+            .filter(r -> (category == null || category.isEmpty() || r.getCategory().equalsIgnoreCase(category)))
+            .filter(r -> (date == null || date.isEmpty() || r.getDate().toString().equals(date)))
+            .collect(Collectors.toList());
     }
 
     public List<FinancialRecord> getAllRecords() {
