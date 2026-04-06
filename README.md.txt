@@ -62,3 +62,14 @@ This project is a Spring Boot-based backend for a **Finance Dashboard System**. 
     "date": "2026-04-05",
     "description": "April Salary"
 }
+### 4. Financial Records (With Advanced Filtering)
+* **URL:** `GET /api/finance/records`
+* **Access:** Admin, Analyst
+* **Query Parameters (Optional):**
+    * `type`: Filter by transaction type (e.g., `INCOME` or `EXPENSE`)
+    * `category`: Filter by specific category (e.g., `Salary`, `Food`, `Rent`)
+    * `date`: Filter by date (Format: `YYYY-MM-DD`)
+* **Example Requests:**
+    * `GET /api/finance/records?type=INCOME` (Only income records)
+    * `GET /api/finance/records?category=Food` (Only food related expenses)
+    * `GET /api/finance/records?type=EXPENSE&category=Rent` (Multi-filter)
